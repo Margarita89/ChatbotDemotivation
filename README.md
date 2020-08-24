@@ -27,5 +27,6 @@ Instructions to run the scripts. You will need:
 1. Install AWS CLI and set role that allows to upload new files for lambda funcrions and layers
 1. Run uploader_script.sh which will create zip files 
 1. Set a trigger EventBridge (CloudWatch Events) for the lambda-function called "reminders_sender"
+
 Here you are!
 
