@@ -25,8 +25,8 @@ Instructions to run the scripts. You will need:
 1. Create a Chatbot with your own name
 1. Register on AWS (free on certain conditions for 12 months)
 1. Create 2 lambda-functions "de_motivation_bot_function" and "reminders_sender"
-1. Create layer SharedModels with description "Shared models and constants" and connect it to both lambda-functions
-1. Install AWS CLI and set role that allows to upload new files for lambda funcrions and layers
+1. Create a layer SharedModels with description "Shared models and constants" and connect it to both lambda-functions
+1. Install AWS CLI and set a role that allows to upload new files for lambda functions and layers
 1. Run uploader_script.sh which will create zip files 
 1. Set a trigger EventBridge (CloudWatch Events) for the lambda-function called "reminders_sender"
 
