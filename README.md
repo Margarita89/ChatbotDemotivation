@@ -2,20 +2,22 @@
 
 The bot is designed to collect, create, store and send reminders to do numbers of exercises or tasks on a regular basis. 
 The reminders are sent with a chosen frequency on a chosen days. 
-The user can send an update each time he/she finished some exercises/tasks. If there are some left, the reminder will be sent with the rest quantity.
+The user can send an update each time he/she finished some exercises/tasks. If there are some left, the reminder will be sent with the remaining amount.
+
+The chatbot is developed using Python, AWS Lambda and makes use of the database DynamoDB. As the chatbot is created for Telegram Messenger service, the library pyTelegramBotAPI was also used.
 
 The user creates reminder and specifies:
 1. Name
-2. Number of tasks/exercises per day
-3. Frequency of reminders pers day
-4. Days to receive reminders - every day, once a week, on weekdays or on weekends
+1. Number of exercises/tasks per day
+1. Frequency of reminders pers day
+1. Days to receive reminders - every day, once a week, on weekdays or on weekends
 
 The user can ask to show all existing reminders that belong to him.
-The user can send an update on a chosen reminder with a number of exercises that are done.
+The user can send an update on a chosen reminder with a number of exercises/tasks that are done.
 
 Possible extentions:
 1. Add keyboard with buttons. Currently the comands for the user are registered in Telegram for the chatbot and are shown as hints.
-2. Introduce some motivation system like scores for doing all planned exercise/tasks on several days in a row.
+1. Introduce some motivation system like scores for doing all planned exercise/tasks on several days in a row.
 
 Instructions to run the scripts. You will need:
 1. Obtain a Token from Telegram BotFather and put it into layers/python/secrets.py file: 
