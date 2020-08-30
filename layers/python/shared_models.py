@@ -1,6 +1,6 @@
 from pynamodb.models import Model
 from pynamodb.attributes import (
-    UnicodeAttribute, NumberAttribute, UnicodeSetAttribute,
+    UnicodeAttribute, NumberAttribute, BooleanAttribute, UnicodeSetAttribute,
     UTCDateTimeAttribute, ListAttribute, MapAttribute)
 
 from secrets import TELE_TOKEN
@@ -20,12 +20,13 @@ REMINDER_FREQUENCY = 'reminder_frequency'
 REMINDER_AMOUNT = 'reminder_amount'
 
 DEFAULT_REMINDER_ID = 1
-DEFAULT_NAME = "Reminder"
+DEFAULT_NAME = "DefaultReminder"
 DEFAULT_AMOUNT = 50
 DEFAULT_FREQUENCY = 10
 DEFAULT_DAYS = 'Weekdays'
 DEFAULT_START_TIME_EACH_DAY = 9
 DEFAULT_END_TIME_EACH_DAY = 21
+DEFAULT_DELETED = False
 DEFAULT_DELTA = 0
 DAYS_VOCAB = {
       1: 'Weekdays', 
@@ -42,6 +43,7 @@ class ReminderMap(MapAttribute):
     start_time_each_day = NumberAttribute(default=DEFAULT_START_TIME_EACH_DAY)
     end_time_each_day = NumberAttribute(default=DEFAULT_END_TIME_EACH_DAY)
     current_state = NumberAttribute(default=DEFAULT_AMOUNT)
+    is_deleted = BooleanAttribute(default=DEFAULT_DELETED)
 
 
 class UserReminder(Model):
