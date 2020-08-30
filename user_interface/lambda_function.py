@@ -18,7 +18,7 @@ from shared_models import (
     REMINDER_ID_EXPONENT_MAX, REMINDER_NAME, REMINDER_DAYS, REMINDER_FREQUENCY,
     REMINDER_AMOUNT, DEFAULT_REMINDER_ID, DEFAULT_NAME, DEFAULT_AMOUNT,
     DEFAULT_FREQUENCY, DEFAULT_DAYS, DEFAULT_START_TIME_EACH_DAY, 
-    DEFAULT_END_TIME_EACH_DAY, DEFAULT_DELTA, DAYS_VOCAB, 
+    DEFAULT_END_TIME_EACH_DAY, DEFAULT_DELETED, DEFAULT_DELTA, DAYS_VOCAB, 
     UserReminder, ReminderMap)
 
 # https://github.com/eternnoir/pyTelegramBotAPI/issues/161#issuecomment-343873014
@@ -34,6 +34,7 @@ start_keyboard = ['Create reminder', 'Show reminders']
 #    start_time_each_day = NumberAttribute(default=DEFAULT_START_TIME_EACH_DAY)
 #    end_time_each_day = NumberAttribute(default=DEFAULT_END_TIME_EACH_DAY)
 #    current_state = NumberAttribute(default=DEFAULT_AMOUNT)
+#    is_deleted = BooleanAttribute(default=DEFAULT_DELETED)
 
 
 #class UserReminder(Model):
@@ -93,8 +94,8 @@ def set_timezone(user_reminder: UserReminder, message_time: str, time_hour: str)
     if not time_hour or not time_hour.isdigit() or not 0 <= int(time_hour) <= 24:
         bot.send_message(
             user_reminder.user_id, 
-            text='Please, enter the hours between 0 and 24. '
-            'Use command:\n /set_timezone Hours')
+            text='Enter the hours between 0 and 24. '
+            'Please, use command:\n /set_timezone Hours')
         return 
     dt_object = datetime.fromtimestamp(int(message_time))
     delta = int(time_hour) - dt_object.hour  
@@ -111,7 +112,7 @@ def set_timezone(user_reminder: UserReminder, message_time: str, time_hour: str)
              'help your motivation\n'
              '- Amount - how many times you want to exercise/repeat this task '
              'per day. For example, 50 push-ups\n'
-             '- Frequency - how often you want to get reminded per day\n'
+             '- Frequency - how often you want to get reminded from 9 am until 21 pm\n'
              '- Days - which days you want to exerice/repeat your task\n\n'
              'Every day you can check how many exercises/repeats are left to do. '
              'We encourage you to send an update with a number of repeats you '
@@ -142,8 +143,16 @@ def create_new_reminder(user_reminder: UserReminder, name: str) -> None:
     if not name:
         bot.send_message(
             user_reminder.user_id, 
-            text='You have not entered the name. Please, enter "/create ReminderName"')
+            text='You have not entered the name. Please, use command '
+            '"/create ReminderName"')
         return
+    for reminder in user_reminder.active_reminders:
+        if reminder.name == name and not reminder.is_deleted:
+            bot.send_message(
+            user_reminder.user_id, 
+            text=f'There is already reminder called {name}. Please, choose '
+                f'another name. Use command /create ReminderName')
+            return
     user_reminder.update(actions=[
         UserReminder.temp_reminder.set(ReminderMap(
             reminder_id=DEFAULT_REMINDER_ID, 
@@ -155,20 +164,25 @@ def create_new_reminder(user_reminder: UserReminder, name: str) -> None:
     ])
     bot.send_message(
         user_reminder.user_id, 
-        text=f'You started to create reminder called {name}. Please, choose '
+        text=f'You started to create reminder called {name}. Choose '
              f'number of times per day you want to repeat a task. '
-             f'Use command:\n "/set_amount Number"')
+             f'Please, use command:\n "/set_amount Amount"')
 
 
-def set_reminder_number(user_reminder: UserReminder, number: str) -> None:
+def set_reminder_amount(user_reminder: UserReminder, number: str) -> None:
     """Sets reminder number in table temp_reminder
     
     :param number: amount of reminders per day
     :param user_reminder: UserReminder object for current user
     :return: None
     """
-    chat_id = user_reminder.user_id
-    if number.strip().isdigit():
+    user_id = user_reminder.user_id
+    if user_reminder.temp_reminder.name == DEFAULT_NAME:
+        bot.send_message(
+            user_id, 
+            text=f'Please, start from command /create ReminderName')
+    
+    elif number.strip().isdigit():
         cur_temp_reminder = user_reminder.temp_reminder
         cur_temp_reminder.amount = int(number)
         cur_temp_reminder.current_state = int(number)
@@ -176,14 +190,14 @@ def set_reminder_number(user_reminder: UserReminder, number: str) -> None:
             UserReminder.temp_reminder.set(cur_temp_reminder)
         ])
         bot.send_message(
-            chat_id, text=f'Please, choose frequency of remineders per day. '
-                        f'Reminders will be send from 9 till 21 your time with '
-                        f'a frequency you will choose. For example, 12 means '
-                        f'every hour. '
-                        f'Use command:\n "/set_frequency Frequency"')
+            user_id, text=f'Please, choose frequency of remineders per day. '
+                        f'Reminders will be sent between 9 am and 9 pm your time with '
+                        f'a frequency you will choose. For example, 1 means '
+                        f'every hour, 2 means every 2 hours and so on. '
+                        f'Please, use command:\n "/set_frequency Frequency"')
     else:
-        bot.send_message(chat_id, text=f'Input ({number}) is not a number. '
-                        f'Use command:\n "/set_amount Number"')
+        bot.send_message(user_id, text=f'Input "{number}" is not a number. '
+                        f'Please, use command:\n "/set_amount Amount"')
         
 
 def set_reminder_frequency(user_reminder: UserReminder, frequency: str) -> None:
@@ -193,21 +207,24 @@ def set_reminder_frequency(user_reminder: UserReminder, frequency: str) -> None:
     :param user_reminder: UserReminder object for current user
     :return: None
     """
-    chat_id = user_reminder.user_id
-    if frequency.strip().isdigit():
+    user_id = user_reminder.user_id
+    if user_reminder.temp_reminder.name == DEFAULT_NAME:
+        bot.send_message(
+            user_id, 
+            text=f'Please, start from command /create ReminderName')
+    elif frequency.strip().isdigit():
         cur_temp_reminder = user_reminder.temp_reminder
         cur_temp_reminder.frequency = int(frequency)
         user_reminder.update(actions=[
             UserReminder.temp_reminder.set(cur_temp_reminder)
         ])
         bot.send_message(
-            chat_id, text='Please, choose days to remind: \n/choose_days\n' 
+            user_id, text='Please, choose days to remind: \n/choose_days\n' 
                           '"Weekdays" - press '
-                          '1\n"Weekends" - press 2\n "Every day" - press 3\n'
-                          '"Once a week" - press 4')
+                          '1\n"Weekends" - press 2\n "Every day" - press 3\n')
     else:
-        bot.send_message(chat_id, text=f'Input ({frequency}) is not a Number'
-                        f'Use command"\n "/set_frequency Frequency"')
+        bot.send_message(user_id, text=f'Input "{frequency}" is not a Number. '
+                        f'Please, use command"\n "/set_frequency Frequency"')
 
 
 def set_reminder_days(user_reminder: UserReminder, days: str) -> None:
@@ -217,8 +234,12 @@ def set_reminder_days(user_reminder: UserReminder, days: str) -> None:
     :param user_reminder: UserReminder object for current user
     :return: None
     """
-    chat_id = user_reminder.user_id
-    if days.strip().isdigit() and int(days) in DAYS_VOCAB:
+    user_id = user_reminder.user_id
+    if user_reminder.temp_reminder.name == DEFAULT_NAME:
+        bot.send_message(
+            user_id, 
+            text=f'Please, start from command /create ReminderName')
+    elif days.strip().isdigit() and int(days) in DAYS_VOCAB:
         chosen_days = DAYS_VOCAB[int(days)]
         cur_temp_reminder = user_reminder.temp_reminder
         cur_temp_reminder.days = chosen_days
@@ -226,13 +247,12 @@ def set_reminder_days(user_reminder: UserReminder, days: str) -> None:
             UserReminder.temp_reminder.set(cur_temp_reminder)
         ])
         bot.send_message(
-            chat_id, text='Please, type "/set" to finish creating this reminder')
+            user_id, text='Please, type "/done" to finish creating this reminder')
     else:
-        bot.send_message(chat_id, text=f'Input ({days}) is not a valid choice'
+        bot.send_message(user_id, text=f'Input ({days}) is not a valid choice'
                         'Please, choose days to remind:\n /choose_days\n'
                         '"Weekdays" - press '
-                          '1\n"Weekends" - press 2\n "Every day" - press 3\n'
-                          '"Once a week" - press 4')
+                          '1\n"Weekends" - press 2\n "Every day" - press 3\n')
 
 
 def move_reminder_temp2active(user_reminder: UserReminder) -> None:
@@ -241,7 +261,12 @@ def move_reminder_temp2active(user_reminder: UserReminder) -> None:
     :param user_reminder: UserReminder object for current user
     :return: None
     """
-    chat_id = user_reminder.user_id
+    user_id = user_reminder.user_id
+    if user_reminder.temp_reminder.name == DEFAULT_NAME:
+        bot.send_message(
+            user_id, 
+            text=f'Please, start from command /create ReminderName')
+        return
     user_reminder.temp_reminder.reminder_id = random.randint(
         10**REMINDER_ID_EXPONENT_MIN, 10**REMINDER_ID_EXPONENT_MAX)
     user_reminder.update(actions=[
@@ -250,41 +275,78 @@ def move_reminder_temp2active(user_reminder: UserReminder) -> None:
                 [user_reminder.temp_reminder])
                 )])
     bot.send_message(
-        chat_id, 
+        user_id, 
         text=f'Reminder {user_reminder.temp_reminder.name}'
             f' was added successfully')
+    user_reminder.temp_reminder.name = DEFAULT_NAME
+    user_reminder.update(actions=[
+                UserReminder.temp_reminder.set(user_reminder.temp_reminder)
+                ])
 
 
-def show_my_reminders(user_reminder: UserReminder) -> None:
+def show_reminders(user_reminder: UserReminder) -> None:
     """Returns reminder if it exists"""
-    chat_id = user_reminder.user_id
+    user_id = user_reminder.user_id
     reminders = []
-    for elem in user_reminder.active_reminders:
-        cur_data = f'Name={elem.name}. Amount per day={elem.amount}, amount to do today={elem.current_state}'
-        reminders.append(cur_data)
+    for reminder in user_reminder.active_reminders:
+        if not reminder.is_deleted:
+            cur_data = (f'Reminder "{reminder.name}", {reminder.amount} to do '
+                    f'per day. Today remains {reminder.current_state}.')
+            reminders.append(cur_data)
     if reminders:
-        message = "\n".join(reminders)
+        message = "\n\n".join(reminders)
         bot.send_message(
-            chat_id, 
+            user_id, 
             text=message)
     else:
-        bot.send_message(chat_id, text='Sorry, you have no reminders')
+        bot.send_message(user_id, text='Sorry, you have no reminders')
 
 
 def update_reminder(user_reminder: UserReminder, today_update: str) -> None:
+    """Updates reminder if it exists"""
     user_update = today_update.split()
-    if len(user_update) != 2 or not user_update[1].isdigit():
+    if (len(user_update) != 2 or not user_update[1].isdigit()):
+        #bot.send_message(
+        #    user_reminder.user_id, 
+        #    text=f'user_update={user_update[0]}')
         bot.send_message(
             user_reminder.user_id, 
-            text='Please, enter a number of exercises/updates you did.'
-                'Use command:\n /today_amount Number')
+            text='Enter a number of exercises/updates you did. '
+                'Please, use command:\n /today_amount Name Amount')
+        return 
     for reminder in user_reminder.active_reminders:
-        if reminder.name == user_update[0]:
+        if reminder.name == user_update[0] and not reminder.is_deleted:
             reminder.current_state -= int(user_update[1])
             user_reminder.update(actions=[
                 UserReminder.active_reminders.set(user_reminder.active_reminders)
-            ])
+                ])
+            bot.send_message(
+                user_reminder.user_id, 
+                text=f'Great! You have only {reminder.current_state} left to do today')
+            return
+    bot.send_message(
+        user_reminder.user_id, 
+        text=f'There is no reminder {user_update[0]}. Please, use command '
+        f'/show_reminders to show existing reminders.')
     
+
+def cancel_reminder(user_reminder: UserReminder, name: str) -> None:
+    for reminder in user_reminder.active_reminders:
+        if reminder.name == name:
+            reminder.is_deleted = True
+            user_reminder.update(actions=[
+                UserReminder.active_reminders.set(user_reminder.active_reminders)
+                ])
+            bot.send_message(
+                user_reminder.user_id, 
+                text=f'Reminder "{name}" was canceled')
+            return 
+    bot.send_message(
+            user_reminder.user_id, 
+            text=f'There is no reminder called "{name}". Please, use command '
+                f'/show_reminders to show existing reminders. And then use' 
+                f' command /cancel_reminder ReminderName')
+            
 
 def process_message(event):
     update = telebot.types.JsonDeserializable.check_json(event["body"])
@@ -334,7 +396,7 @@ def lambda_handler(event, context):
                 chat_id, 
                 text='How much time in hours is it now? ' 
                     'We use it to set your timezone for reminders. '
-                    'Use command:\n "/set_timezone Hours"')
+                    'Please, use command:\n "/set_timezone Hours"')
         elif command == '/set_timezone':
             set_timezone(
                 user_reminder=current_user, 
@@ -344,7 +406,7 @@ def lambda_handler(event, context):
             create_new_reminder(user_reminder=current_user, name=value)
             print('Create')
         elif command == '/set_amount':  
-            set_reminder_number(user_reminder=current_user, number=value)
+            set_reminder_amount(user_reminder=current_user, number=value)
         elif command == '/set_frequency': 
             set_reminder_frequency(user_reminder=current_user, frequency=value)
         elif command == '/choose_days':  
@@ -352,9 +414,11 @@ def lambda_handler(event, context):
         elif command == '/done':  
             move_reminder_temp2active(user_reminder=current_user)
         elif command == '/show_reminders':
-            show_my_reminder(user_reminder=current_user)
-        elif command == '/my_today_amount:
+            show_reminders(user_reminder=current_user)
+        elif command == '/today_amount':
             update_reminder(user_reminder=current_user, today_update=value)
+        elif command == '/cancel_reminder':
+            cancel_reminder(user_reminder=current_user, name=value)
         elif command:
             bot.send_message(current_user.user_id, text="Unknown command")
         print(f'Success!')
