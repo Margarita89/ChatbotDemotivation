@@ -42,14 +42,15 @@ def send_reminders() -> None:
             print(f'is_deleted={reminder.is_deleted}')
             #print(f'reminder.start_time_each_day={reminder.start_time_each_day} '
             #    f'reminder.end_time_each_day={reminder.end_time_each_day} ')
+            rest_amount = reminder.amount - reminder.current_state
             if if_alert(
                 day2remind=reminder.days, hour_user=hour_user, day_user=day_user, 
                 start=reminder.start_time_each_day, end=reminder.end_time_each_day,
-                freq=reminder.frequency, rest=reminder.amount - reminder.current_state, 
+                freq=reminder.frequency, rest=rest_amount, 
                 is_deleted=reminder.is_deleted):
                     user_reminders.append(
                         f'You have a task called {reminder.name}\n'
-                        f'to repeat {reminder.current_state} times.')
+                        f'to repeat {rest_amount} times.')
         message = "\n".join(user_reminders)
         print(f'message={message}')
         if message:
