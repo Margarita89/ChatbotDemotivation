@@ -26,7 +26,6 @@ DEFAULT_FREQUENCY = 10
 DEFAULT_DAYS = 'Weekdays'
 DEFAULT_START_TIME_EACH_DAY = 9
 DEFAULT_END_TIME_EACH_DAY = 21
-DEFAULT_DELETED = False
 DEFAULT_DELTA = 0
 DAYS_VOCAB = {
       1: 'Weekdays', 
@@ -43,7 +42,7 @@ class ReminderMap(MapAttribute):
     start_time_each_day = NumberAttribute(default=DEFAULT_START_TIME_EACH_DAY)
     end_time_each_day = NumberAttribute(default=DEFAULT_END_TIME_EACH_DAY)
     current_state = NumberAttribute(default=DEFAULT_AMOUNT)
-    is_deleted = BooleanAttribute(default=DEFAULT_DELETED)
+    is_deleted = BooleanAttribute(default=False)
 
 
 class UserReminder(Model):
