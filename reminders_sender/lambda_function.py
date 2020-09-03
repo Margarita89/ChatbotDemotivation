@@ -15,8 +15,15 @@ bot = telebot.TeleBot(TELE_TOKEN, threaded=False)
 
 
 def if_alert(
-    day2remind: str, start: int, end: int, freq: int, rest: int, is_deleted: bool, 
-    hour_user: int, day_user: int) -> bool:
+    day2remind: str, 
+    start: int, 
+    end: int, 
+    freq: int, 
+    rest: int,
+    is_deleted: bool, 
+    hour_user: int, 
+    day_user: int
+) -> bool:
         if (start <= hour_user <= end and (hour_user - start) % freq == 0 and 
             rest > 0 and day_user in CONVERT_WEEKS[day2remind] and not is_deleted):
             return True
