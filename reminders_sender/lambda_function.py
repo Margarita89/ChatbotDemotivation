@@ -8,22 +8,10 @@ from datetime import datetime, timedelta
 import telebot
 
 from shared_models import (
-    TELE_TOKEN, URL, TABLE_USER_REMINDER, 
-    TABLE_TMP_REMINDER_IN_PROGRESS, USER_ID, REMINDER_ID_EXPONENT_MIN,
-    REMINDER_ID_EXPONENT_MAX, REMINDER_NAME, REMINDER_DAYS, REMINDER_FREQUENCY,
-    REMINDER_AMOUNT, DEFAULT_REMINDER_ID, DEFAULT_NAME, DEFAULT_AMOUNT,
-    DEFAULT_FREQUENCY, DEFAULT_DAYS, DEFAULT_START_TIME_EACH_DAY, 
-    DEFAULT_END_TIME_EACH_DAY, DEFAULT_DELETED, DEFAULT_DELTA, DAYS_VOCAB, 
-    UserReminder, ReminderMap)
+    TELE_TOKEN, CONVERT_WEEKS, UserReminder, ReminderMap)
 
 # https://github.com/eternnoir/pyTelegramBotAPI/issues/161#issuecomment-343873014
 bot = telebot.TeleBot(TELE_TOKEN, threaded=False)
-
-CONVERT_WEEKS = {
-    'Weekdays' : {0, 1, 2, 3, 4},
-    'Weekends' : {5, 6},
-    'Every day' : {0, 1, 2, 3, 4, 5, 6}
-}
 
 
 def if_alert(

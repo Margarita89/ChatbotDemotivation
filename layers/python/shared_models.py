@@ -8,16 +8,9 @@ URL = "https://api.telegram.org/bot{}/".format(TELE_TOKEN)
 	
 # table_names
 TABLE_USER_REMINDER = 'user_reminder_data'
-TABLE_TMP_REMINDER_IN_PROGRESS = 'user_temp_reminder_data'
-
-USER_ID = 'user_id'
 
 REMINDER_ID_EXPONENT_MIN = 10
 REMINDER_ID_EXPONENT_MAX = 20
-REMINDER_NAME = 'reminder_name'
-REMINDER_DAYS = 'reminder_days'
-REMINDER_FREQUENCY = 'reminder_frequency'
-REMINDER_AMOUNT = 'reminder_amount'
 
 DEFAULT_REMINDER_ID = 1
 DEFAULT_NAME = "DefaultReminder"
@@ -32,6 +25,11 @@ DAYS_VOCAB = {
       2: 'Weekends', 
       3: 'Every day', 
       4: 'Once a week'}
+CONVERT_WEEKS = {
+    'Weekdays' : {0, 1, 2, 3, 4},
+    'Weekends' : {5, 6},
+    'Every day' : {0, 1, 2, 3, 4, 5, 6}
+}
     
 class ReminderMap(MapAttribute):
     reminder_id = NumberAttribute(default=DEFAULT_REMINDER_ID)
