@@ -24,10 +24,11 @@ def if_alert(
     hour_user: int, 
     day_user: int
 ) -> bool:
-        if (start <= hour_user <= end and (hour_user - start) % freq == 0 and 
-            rest > 0 and day_user in CONVERT_WEEKS[day2remind] and not is_deleted):
-            return True
-        return False
+    is_inside_interval = start <= hour_user <= end
+    # send reminder only on hours that have a zero remainder
+    is_correct_remainder = (hour_user - start) % freq == 0
+    is_correct_day = day_user in CONVERT_WEEKS[day2remind] 
+    return (is_inside_interval and is_correct_remainder and rest > 0 and is_correct_day and not is_deleted)
 
 
 def send_reminders() -> None:
@@ -44,7 +45,7 @@ def send_reminders() -> None:
             if if_alert(
                 day2remind=reminder.days, hour_user=hour_user, day_user=day_user, 
                 start=reminder.start_time_each_day, end=reminder.end_time_each_day,
-                freq=reminder.frequency, rest=reminder.current_state, 
+                freq=reminder.frequency, rest=reminder.amount - reminder.current_state, 
                 is_deleted=reminder.is_deleted):
                     user_reminders.append(
                         f'You have a task called {reminder.name}\n'
